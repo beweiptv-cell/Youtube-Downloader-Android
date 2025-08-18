@@ -12,6 +12,9 @@ start = time.time()
 
 cprint("WELCOME TO TERMUX DOWNLOADER","cyan","on_red",attrs=["bold"])
 
+#Update Server URL:
+url = "https://raw.githubusercontent.com/DrDelin/Youtube-Downloader-Android/refs/heads/master/YTD_Android.py"
+
 #Local Version No:
 l_version = linecache.getline(r"/data/data/com.termux/files/home/main.py", 1)
 #Local Engine No:
@@ -19,44 +22,11 @@ l_engine = linecache.getline(r"/data/data/com.termux/files/home/main.py", 2)
 
 #Update Failsafe Bypasser
 try:
-    #Cloud Version No:
-    def cv(soup):
-        vindex = soup.find("#Version")
-        ver = soup[vindex + len("#Version"):vindex + len("#Version") + 9]
-        c_version = "#Version" +ver+"\n"
-
-        #Version number pattern verification:
-        v = ver.replace(" ","")
-        v_pattern = r"^\d+.\d+.\d+.\d+$"
-        if re.match(v_pattern, v):
-            return c_version
-        else:
-            print(colored('\n__Update_server_timeout__','red'))
-            return l_version
-    
-    #Cloud Engine No:
-    def ce(soup):
-        eindex = soup.find("#Engine")
-        eng = soup[eindex + len("#Engine"):eindex + len("#Engine") + 5]
-        c_engine = "#Engine"+eng+"\n"
-
-        #Engine number pattern verification:
-        e = eng.replace(" ","")
-        e_pattern = r"^\d+.\d+$"
-        if re.match(e_pattern, e):
-            return c_engine
-        else:
-            print(colored('\n__Update_server_timeout__','red'))   
-            return l_engine
-
-    #Getting cloud edition's version and engine number
-    url = "https://github.com/DrDelin/Youtube-Downloader-Android/blob/master/YTD_Android.py"
-    request  = requests.get(url)
-    soup = BeautifulSoup(request.content, 'html.parser').text
-    
-    c_version = cv(soup)
-    c_engine = ce(soup)
-    
+    response = requests.get(url, timeout=10)  # timeout in seconds
+    # Split into lines
+    lines = response.text.splitlines()
+    c_version = (lines[0] if len(lines) > 0 else "")+"\n"
+    c_engine = (lines[1] if len(lines) > 1 else "")+"\n" 
     print("\nUpdate Server: "+colored('ACTIVE','green')+"\nFailsafe Update Verification System By-Passer: "+colored('DEACTIVATED','green')+"\nAuto Upgrade System: "+colored('ACTIVE','green')+"\nDownloader: "+colored('ACTIVE & RUNNING','green')+"\n")
 
 except:
@@ -133,6 +103,7 @@ if not sys.argv[1] == "forced":
         os.system("sh refresh.sh auto")
         print("Upgraded...!\n")
         os.system(code)
+
 #Forced Manual upgrade / Troubleshoot date recorder
 else:
     path = "/data/data/com.termux/files/home/default.json"

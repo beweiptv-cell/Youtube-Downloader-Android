@@ -11,7 +11,7 @@
   1. Install termux from github https://github.com/termux/termux-app/releases (arm64 recommended ,use arm only for device lower than android 7)
   2. Type the commands or just copy or use the *copy button* provided and **Paste it on termux**:(Note)(For first time installation, type 'y' whenever it asks inbetween)
       ```
-      pkg up -y -y -y -y
+      pkg up -y
       pkg install git -y
       git clone https://github.com/DrDelin/Youtube-Downloader-Android/ -b master --single-branch
       cd Youtube-Downloader-Android
