@@ -43,7 +43,7 @@ if not sys.argv[1] == "forced":
     code = "python '/data/data/com.termux/files/home/main.py' '" +sys.argv[1] +"'"
     
     if c_engine == l_engine:
-        print("\nNo Engine upgrade available from developer...\n")
+        print("\n"+colored("No Engine upgrade available from developer...","yellow")+"\n")
 
         #Auto Upgrade segment
         path = "/data/data/com.termux/files/home/default.json"
@@ -78,7 +78,7 @@ if not sys.argv[1] == "forced":
             print("\nChecking version update...\n")
 
         if c_version == l_version:
-            print("\nNo new update...\n")
+            print("\n"+colored('No new update...','yellow')+"\n")
             os.system(code)
         else:
             print("\nNew version available...\n\nUpdating...\n\n")
