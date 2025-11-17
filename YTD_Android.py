@@ -399,6 +399,16 @@ def others():
     opt = {                
                     'outtmpl': path + "%(title).50s.%(ext)s",
                     'external_downloader': 'aria2c',
+                    'external_downloader_args': [
+                                            "-c",
+                                            "-x16",
+                                            "-s16",
+                                            "--min-split-size=1M",
+                                            "--max-connection-per-server=16",
+                                            "--timeout=60",
+                                            "--max-tries=20",
+                                            "--retry-wait=2"
+                                                    ],
                     'writesubtitles' : True,
                     'writeautomaticsub' : True, 
                 }
