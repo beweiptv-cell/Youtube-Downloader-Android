@@ -75,7 +75,7 @@ Termux-Downloader has an utilities option with various features
   
       pkg up -y -y -y -y
       pkg install git -y
-      git clone https://github.com/DrDelin/Youtube-Downloader-Android/ -b Sigma-D --single-branch
+      git clone https://github.com/DrDelin/Youtube-Downloader-Android/ -b beta --single-branch
       cd Youtube-Downloader-Android
       sh install.sh
   
@@ -84,8 +84,8 @@ Termux-Downloader has an utilities option with various features
   2. (For first time only) pkg install vim-gtk -y
   3. Edit refresh.sh file with ```vi refresh.sh```
   4. Change the 12th line,  
-      a. Stable -> Beta: change ***master*** to ***Sigma-D***   
-      b. Beta -> Stable: change ***Sigma-D*** to ***master***  
+      a. Stable -> Beta: change ***master*** to ***beta***   
+      b. Beta -> Stable: change ***beta*** to ***master***  
   5. Exit vim editor(esc -> :wq -> enter)
   6. Then, run ```sh refresh.sh```
 
