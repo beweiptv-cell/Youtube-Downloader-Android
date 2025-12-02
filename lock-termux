@@ -1,0 +1,174 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# Pastikan tidak ada interupsi yang mengganggu proses
+trap "" 0 1 2 3 15 20
+
+# --- Colors and Variables ---
+R='\033[1;31m'   # Red
+B='\033[1;34m'   # Blue
+C='\033[0;36m'   # Cyan
+G='\033[1;32m'   # Green
+W='\033[1;37m'   # White
+Y='\033[1;33m'   # Yellow
+P='\033[1;35m'   # Purple/Magenta
+NC='\033[0m'     # No Color/Reset
+
+Up2='\u001b[2A'  # Pindahkan kursor ke atas 2 baris (lebih aman)
+Up1='\u001b[1A'  # Pindahkan kursor ke atas 1 baris
+clsln='\r\033[K' # Carriage return dan hapus baris
+
+# Flag untuk mengontrol opsi "Change Pass"
+# 0 = Nonaktif (sedang konfirmasi pass lama), 1 = Aktif (tampilan login utama)
+tmpin=1          
+
+FILE=$(which login)
+
+# Ambil nilai VAL dari file login saat skrip dimulai (FIX KRITIKAL)
+if grep -q "VAL=" $FILE; then
+    VAL=$(grep "VAL=" $FILE | cut -d'"' -f2)
+else
+    VAL=""
+fi
+
+# --- Enhanced Banner (MOTD) ---
+banner () {
+    clear
+    
+    # Kosongkan beberapa baris untuk penempatan banner yang lebih baik
+    for i in {1..5}; do echo done
+    
+    echo -e "${P}  ╔═══════════════════════════════════╗${NC}"
+    echo -e "${P}  ║${NC} ${C}        T E R M U X   L O C K        ${P}║${NC}"
+    echo -e "${P}  ║${NC} ${Y}----------------------------------- ${P}║${NC}"
+    echo -e "${P}  ║${NC} ${W}  [ Secure Login Authentication ]    ${P}║${NC}"
+    echo -e "${P}  ╚═══════════════════════════════════╝${NC}"
+    echo
+    echo -e "  ${R}>>${NC} ${G}Please Enter Your Password to Continue.${NC}"
+    echo
+}
+
+# --- Function to Set New Password ---
+set_Pass () {
+    banner
+    echo -e "  ${C}>>> ${Y}SETTING NEW PASSWORD ${C}<<<${NC}"
+    echo
+    while true; do
+        
+        # Set Password Baru
+        echo -en "${clsln} ${G}Set new Pass: ${W}"
+        stty -echo # Sembunyikan input
+        read pin
+        stty echo  # Tampilkan echo kembali
+        
+        if [[ ${pin} =~ ^(q|Q)$ ]]; then
+            exit 1
+        fi
+
+        # Konfirmasi Password
+        echo -en "${Up1}${clsln} ${G}Confirm Pass: ${W}"
+        stty -echo # Sembunyikan input
+        read tmpin_confirm # Gunakan variabel lokal untuk konfirmasi
+        stty echo  # Tampilkan echo kembali
+
+        if [[ ${tmpin_confirm} =~ ^(q|Q)$ ]]; then
+            exit 1
+        elif [[ $pin = $tmpin_confirm ]]; then
+            
+            # Hitung SHA256 dan ambil hash-nya saja
+            local hashed_pin=$(echo $tmpin_confirm | sha256sum | cut -d' ' -f1)
+            
+            # Hapus baris VAL lama dan sisipkan yang baru di baris ke-2
+            sed -i '/VAL=/d' $FILE 
+            sed -i "2 a VAL=\"$hashed_pin\"" $FILE
+
+            echo -e "${Up1}${clsln}${Y} [${R}!${Y}]${G} Great! New Pass set.${NC}"
+            sleep 1
+            clear
+            exit 0
+        else
+            echo -e "${Up1}${clsln}${Y} [${R}!${Y}]${R} Oops! Passwords do not match. Try again.${NC}"
+            sleep 1.5
+            echo -en "${clsln}" # Bersihkan baris input yang salah
+        fi
+    done
+}
+
+# --- Function to Get and Check Password ---
+get_Pass () {
+    while true; do
+        
+        # Bersihkan baris input sebelumnya (jika ada kesalahan)
+        echo -en "${clsln}"
+        echo -en " ${Y}Enter Pass:${W} \c"
+        
+        # Pastikan tidak ada sisa input yang terbaca
+        while read -r -t 0; do read -r; done
+        
+        stty -echo # Sembunyikan input (FIX KRITIKAL)
+        read pin
+        stty echo  # Kembalikan echo
+
+        # Hitung hash dari input
+        local pin1=$(echo $pin | sha256sum | cut -d' ' -f1)
+        
+        if [[ ${pin1} = $VAL ]]; then
+            return 0 # Password benar
+        elif [[ ${pin} =~ ^(q|Q)$ ]]; then
+            exit 1
+        # Hanya izinkan Change Pass jika tmpin=1 (aktif)
+        elif [[ ${pin} =~ ^(c|C)$ ]] && [[ $tmpin -eq 1 ]]; then
+            ch_Pass
+        else
+            # Tampilkan pesan error
+            
+            # Tampilkan input yang salah (opsional, hanya untuk menunjukkan apa yang diketik)
+            echo -e "${Up1}${clsln} ${Y}Enter Pass:${R} $pin ${NC}"
+            
+            echo -e "${clsln}"
+            echo -e "${Y} [${R}!${Y}]${R} Wrong Pass! Try again.${NC}"
+            sleep 1.5
+            echo -en "${clsln}${Up2}" # Pindahkan kursor ke posisi input
+        fi
+    done
+}
+
+# --- Function to Change Password ---
+ch_Pass () {
+    banner
+    echo -e "  ${Y} [${R}!${Y}]${C} Confirm old Pass to change it. ${NC}"
+    echo " "
+    tmpin=0 # Nonaktifkan opsi Change Pass selama konfirmasi
+    get_Pass
+    
+    # Jika get_Pass berhasil (password lama benar)
+    echo -e "${G}Password lama terkonfirmasi!${NC}"
+    sleep 1
+    
+    # Hapus baris VAL lama dan panggil set_Pass
+    sed -i '/VAL=/d' $FILE
+    set_Pass # set_Pass akan keluar secara otomatis jika berhasil
+}
+
+# --- Script Execution Logic ---
+
+# 1. Jika skrip dipanggil dengan argumen "set_lock"
+if [[ "$@" == "set_lock" ]]; then
+    set_Pass
+    exit
+fi
+
+# 2. Logic utama saat Termux dibuka
+banner
+
+# Tampilkan opsi di bawah banner
+tmpin=1 # Aktifkan opsi Change Pass
+echo -en " ${Y}[${R} Q ${Y}]${C} Exit.${NC} ${Y} [${R} C ${Y}]${C} Change Pass.${NC}"
+echo
+echo 
+
+# Panggil fungsi untuk meminta password
+get_Pass
+
+# Jika get_Pass berhasil, skrip akan sampai di sini
+clear
+exit
